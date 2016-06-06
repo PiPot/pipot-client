@@ -1,0 +1,36 @@
+#!/bin/bash
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+PIDFILE="${DIR}/pipotd.pid"
+CONFIG="${DIR}/../honeypot_profile.json"
+
+cmd=$1
+
+function usage() {
+    echo -e "\n  PiPot Micro Honeypot Daemon\n"
+    echo -e "\tpipotd [ --start | --dev | --stop | --help ]\n\n"
+    echo -e "\t\t--start\tStarts the pipotd process"
+    echo -e "\t\t--dev\tRun the pipotd process in the foreground"
+    echo -e "\t\t--stop\tStops the pipotd process"
+    echo -e "\t\t--help\tThis help\n"
+}
+
+if [ "${cmd}" == "--start" ]; then
+    if [ ! -f ${CONFIG} ]; then
+        echo "[e] No config file found"
+        exit 1
+    fi
+
+    "twistd" -y "${DIR}/pipot.tac" --pidfile "${PIDFILE}" --syslog --prefix=pipotd
+elif [ "${cmd}" == "--dev" ]; then
+  if [ ! -f ${CONFIG} ]; then
+      echo "[e] No config file found (searched: ${CONFIG})"
+      exit 1
+  fi
+
+  "${DIR}/twistd" -noy "${DIR}/pipot.tac"
+elif [ "${cmd}" == "--stop" ]; then
+    pkill -F "${PIDFILE}"
+else
+    usage
+    exit 1
+fi
